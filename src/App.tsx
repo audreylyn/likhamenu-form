@@ -168,8 +168,8 @@ function App() {
                   required
                 >
                   <option value="">Business Type</option>
-                  <option value="Physical">Physical (Brick & Mortar)</option>
-                  <option value="Online">Online (E-commerce/Digital)</option>
+                  <option value="Physical">Physical Location</option>
+                  <option value="Online">Online Only</option>
                   <option value="Both">Both (Hybrid)</option>
                 </select>
                 <span className="required-indicator">*</span>
