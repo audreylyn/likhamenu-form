@@ -1,0 +1,315 @@
+import { useState, useEffect } from 'react'
+import './App.css'
+
+function App() {
+  const [formData, setFormData] = useState({
+    // Group 1: Identity
+    fullName: '',
+    businessName: '',
+    businessType: '',
+    // Group 2: Contact
+    email: '',
+    phone: '',
+    address: '',
+    // Group 3: Project
+    timeline: '',
+    budget: '',
+    plan: '',
+    sections: [] as string[],
+    socialMedia: '',
+    googleDrive: ''
+  })
+
+  const availableSections = ['Hero', 'About', 'Services', 'Gallery', 'Pricing', 'Contact', 'Blog', 'Testimonials', 'Footer', 'FAQ']
+  const mandatorySections = ['Hero', 'Contact'] // Mandatory for Basic plan
+
+  // Auto-select mandatory sections when Basic plan is chosen
+  useEffect(() => {
+    if (formData.plan === 'Basic') {
+      setFormData(prev => {
+        const newSections = [...prev.sections]
+        mandatorySections.forEach(section => {
+          if (!newSections.includes(section)) {
+            newSections.push(section)
+          }
+        })
+        return { ...prev, sections: newSections }
+      })
+    }
+  }, [formData.plan])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = e.target
+    
+    // Prevent unchecking mandatory sections on Basic plan
+    if (formData.plan === 'Basic' && mandatorySections.includes(value) && !checked) {
+      return
+    }
+    
+    const currentSections = formData.sections
+    if (checked) {
+      if (formData.plan === 'Basic' && currentSections.length >= 6) {
+        return
+      }
+      setFormData(prev => ({ ...prev, sections: [...prev.sections, value] }))
+    } else {
+      setFormData(prev => ({ ...prev, sections: prev.sections.filter(s => s !== value) }))
+    }
+  }
+
+  const isSectionDisabled = (section: string) => {
+    if (formData.plan !== 'Basic') return false
+    // Mandatory sections are always checked but shown as "locked"
+    if (mandatorySections.includes(section)) return true
+    return !formData.sections.includes(section) && formData.sections.length >= 6
+  }
+
+  const isMandatory = (section: string) => {
+    return formData.plan === 'Basic' && mandatorySections.includes(section)
+  }
+
+  // Calculate remaining optional slots (6 total - 2 mandatory = 4 optional choices)
+  const getOptionalSectionsCount = () => {
+    return formData.sections.filter(s => !mandatorySections.includes(s)).length
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    console.log('Form Data:', formData)
+    alert('Form submitted successfully! Check console for data.')
+  }
+
+  return (
+    <div className="get-quote-page">
+      <div className="get-quote-container">
+        <div className="get-quote-content">
+          {/* Form */}
+          <div className="quote-form-wrapper">
+            <h2 className="form-heading">Start Your Project</h2>
+            <form className="quote-form" onSubmit={handleSubmit}>
+              
+              {/* ========== GROUP 1: IDENTITY ========== */}
+              <div className="form-section-header full-width">
+                <span className="section-number">1</span>
+                <span className="section-title">The Basics</span>
+              </div>
+
+              {/* Full Name */}
+              <div className="form-group">
+                <input
+                  type="text"
+                  name="fullName"
+                  placeholder="Full Name"
+                  className="form-input"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  required
+                />
+                <span className="required-indicator">*</span>
+              </div>
+
+              {/* Business Name */}
+              <div className="form-group">
+                <input
+                  type="text"
+                  name="businessName"
+                  placeholder="Business Name"
+                  className="form-input"
+                  value={formData.businessName}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              {/* Business Type Dropdown */}
+              <div className="form-group full-width">
+                <select
+                  name="businessType"
+                  className="form-select"
+                  value={formData.businessType}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Business Type</option>
+                  <option value="Physical">Physical (Brick & Mortar)</option>
+                  <option value="Online">Online (E-commerce/Digital)</option>
+                  <option value="Both">Both (Hybrid)</option>
+                </select>
+                <span className="required-indicator">*</span>
+              </div>
+
+              {/* ========== GROUP 2: CONTACT ========== */}
+              <div className="form-section-header full-width">
+                <span className="section-number">2</span>
+                <span className="section-title">Contact Information</span>
+              </div>
+
+              {/* Email */}
+              <div className="form-group">
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email Address"
+                  className="form-input"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                />
+                <span className="required-indicator">*</span>
+              </div>
+
+              {/* Phone */}
+              <div className="form-group">
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="Phone Number"
+                  className="form-input"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  required
+                />
+                <span className="required-indicator">*</span>
+              </div>
+
+              {/* Address (Optional) */}
+              <div className="form-group full-width">
+                <textarea
+                  name="address"
+                  placeholder="Address (Optional)"
+                  className="form-textarea"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  rows={2}
+                />
+              </div>
+
+              {/* ========== GROUP 3: PROJECT ========== */}
+              <div className="form-section-header full-width">
+                <span className="section-number">3</span>
+                <span className="section-title">Project Details</span>
+              </div>
+
+              {/* Timeline */}
+              <div className="form-group">
+                <select
+                  name="timeline"
+                  className="form-select"
+                  value={formData.timeline}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Project Timeline</option>
+                  <option value="urgent">Urgent (1-2 weeks)</option>
+                  <option value="normal">Normal (1-2 months)</option>
+                  <option value="flexible">Flexible (3+ months)</option>
+                </select>
+                <span className="required-indicator">*</span>
+              </div>
+
+              {/* Budget */}
+              <div className="form-group">
+                <select
+                  name="budget"
+                  className="form-select"
+                  value={formData.budget}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Budget Range</option>
+                  <option value="5k-10k">₱5,000 - ₱10,000</option>
+                  <option value="10k-25k">₱10,000 - ₱25,000</option>
+                  <option value="25k-50k">₱25,000 - ₱50,000</option>
+                  <option value="50k+">₱50,000+</option>
+                </select>
+                <span className="required-indicator">*</span>
+              </div>
+
+              {/* Plan Selection Dropdown */}
+              <div className="form-group full-width">
+                <select
+                  name="plan"
+                  className="form-select"
+                  value={formData.plan}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Select Plan</option>
+                  <option value="Basic">Basic (4-6 sections max)</option>
+                  <option value="Pro">Pro (7-12+ sections)</option>
+                </select>
+                <span className="required-indicator">*</span>
+              </div>
+
+              {/* Page Sections */}
+              <div className="form-group full-width">
+                <div className="sections-label">
+                  Page Sections {formData.plan === 'Basic' && `(${getOptionalSectionsCount()}/4 optional + 2 mandatory)`}
+                  {formData.plan === 'Pro' && `(${formData.sections.length} selected)`}
+                </div>
+                <div className="sections-grid">
+                  {availableSections.map(section => (
+                    <label 
+                      key={section} 
+                      className={`section-checkbox ${isSectionDisabled(section) && !isMandatory(section) ? 'disabled' : ''} ${formData.sections.includes(section) ? 'checked' : ''} ${isMandatory(section) ? 'mandatory' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        value={section}
+                        checked={formData.sections.includes(section)}
+                        onChange={handleCheckboxChange}
+                        disabled={isSectionDisabled(section)}
+                      />
+                      <span className="checkmark"></span>
+                      {section}
+                      {isMandatory(section) && <span className="mandatory-badge">Required</span>}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Social Media */}
+              <div className="form-group">
+                <input
+                  type="text"
+                  name="socialMedia"
+                  placeholder="Social Media Links"
+                  className="form-input"
+                  value={formData.socialMedia}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              {/* Google Drive Link */}
+              <div className="form-group">
+                <input
+                  type="url"
+                  name="googleDrive"
+                  placeholder="Google Drive Link for Assets"
+                  className="form-input"
+                  value={formData.googleDrive}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              {/* Submit Button */}
+              <div className="form-group full-width">
+                <button type="submit" className="submit-btn">
+                  <span className="submit-btn__text">Submit Your Project</span>
+                  <span className="submit-btn__icon"></span>
+                  <span className="submit-btn__filler"></span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default App
