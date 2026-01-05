@@ -1,84 +1,58 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import './App.css'
 
 function App() {
   const [formData, setFormData] = useState({
-    // Group 1: Identity
-    fullName: '',
+    // Client Information
     businessName: '',
-    businessType: '',
-    // Group 2: Contact
+    ownerName: '',
+    contactNumber: '',
     email: '',
-    phone: '',
-    address: '',
-    // Group 3: Project
-    timeline: '',
-    budget: '',
-    plan: '',
-    sections: [] as string[],
-    socialMedia: '',
-    googleDrive: ''
+    facebookPage: '',
+
+    // Plan
+    plan: '999', // Default to 999 Basic
+
+    // Business Details
+    businessType: '',
+    productsAndPrices: '',
+
+    // Logo and Photos
+    logoChoice: 'upload', // 'upload', 'text', 'none'
+    logoFile: null as string | null,
+
+    photoChoice: 'upload', // 'upload', 'temp'
+    productPhotos: null as string | null,
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<{type: 'success' | 'error', message: string} | null>(null)
-
-  const availableSections = ['Hero', 'About', 'Services', 'Gallery', 'Pricing', 'Contact', 'Blog', 'Testimonials', 'Footer', 'FAQ']
-  const mandatorySections = ['Hero', 'Contact'] // Mandatory for Basic plan
-
-  // Auto-select mandatory sections when Basic plan is chosen
-  useEffect(() => {
-    if (formData.plan === 'Basic') {
-      setFormData(prev => {
-        const newSections = [...prev.sections]
-        mandatorySections.forEach(section => {
-          if (!newSections.includes(section)) {
-            newSections.push(section)
-          }
-        })
-        return { ...prev, sections: newSections }
-      })
-    }
-  }, [formData.plan])
+  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, checked } = e.target
-    
-    // Prevent unchecking mandatory sections on Basic plan
-    if (formData.plan === 'Basic' && mandatorySections.includes(value) && !checked) {
-      return
-    }
-    
-    const currentSections = formData.sections
-    if (checked) {
-      if (formData.plan === 'Basic' && currentSections.length >= 6) {
-        return
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'logoFile' | 'productPhotos') => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      try {
+        const base64 = await convertFileToBase64(file)
+        setFormData(prev => ({ ...prev, [fieldName]: base64 }))
+      } catch (error) {
+        console.error('Error converting file:', error)
+        alert('Error uploading file. Please try another image.')
       }
-      setFormData(prev => ({ ...prev, sections: [...prev.sections, value] }))
-    } else {
-      setFormData(prev => ({ ...prev, sections: prev.sections.filter(s => s !== value) }))
     }
   }
 
-  const isSectionDisabled = (section: string) => {
-    if (formData.plan !== 'Basic') return false
-    // Mandatory sections are always checked but shown as "locked"
-    if (mandatorySections.includes(section)) return true
-    return !formData.sections.includes(section) && formData.sections.length >= 6
-  }
-
-  const isMandatory = (section: string) => {
-    return formData.plan === 'Basic' && mandatorySections.includes(section)
-  }
-
-  // Calculate remaining optional slots (6 total - 2 mandatory = 4 optional choices)
-  const getOptionalSectionsCount = () => {
-    return formData.sections.filter(s => !mandatorySections.includes(s)).length
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = error => reject(error)
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,18 +60,18 @@ function App() {
     setIsSubmitting(true)
     setSubmitStatus(null)
 
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyM49JMQMrEJVv-BEZeoMmf1hXMqnOmS6pduRg-LhUqsQYfZd9Y5YwtUxh_8MejhzGI/exec'
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxXQvsj0LYlAGfcQWdz9SkTwqkcL28xoj4YY15FLr7BeZ736zEbFqrnuZWIF9J69AeF/exec'
 
     try {
-      // Use URLSearchParams for reliable data transmission to Google Apps Script
       const params = new URLSearchParams()
+
+      // Append all simple string fields
       Object.entries(formData).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          params.append(key, value.join(', '))
-        } else {
+        if (value !== null) {
           params.append(key, value as string)
         }
       })
+
       params.append('timestamp', new Date().toISOString())
 
       await fetch(GOOGLE_SCRIPT_URL, {
@@ -120,223 +94,279 @@ function App() {
     <div className="get-quote-page">
       <div className="get-quote-container">
         <div className="get-quote-content">
-          {/* Form */}
           <div className="quote-form-wrapper">
             <h2 className="form-heading">Start Your Project</h2>
             <form className="quote-form" onSubmit={handleSubmit}>
-              
-              {/* ========== GROUP 1: IDENTITY ========== */}
+
+              {/* ========== SECTION 1: CLIENT INFORMATION ========== */}
               <div className="form-section-header full-width">
                 <span className="section-number">1</span>
-                <span className="section-title">The Basics</span>
-              </div>
-
-              {/* Full Name */}
-              <div className="form-group">
-                <input
-                  type="text"
-                  name="fullName"
-                  placeholder="Full Name"
-                  className="form-input"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  required
-                />
-                <span className="required-indicator">*</span>
+                <span className="section-title">Client Information</span>
               </div>
 
               {/* Business Name */}
               <div className="form-group">
+                <label className="field-label">Business Name <span className="required">*</span></label>
                 <input
                   type="text"
                   name="businessName"
-                  placeholder="Business Name"
                   className="form-input"
                   value={formData.businessName}
                   onChange={handleInputChange}
+                  required
                 />
-                <span className="required-indicator">*</span>
               </div>
 
-              {/* Business Type Dropdown */}
-              <div className="form-group full-width">
-                <select
-                  name="businessType"
-                  className="form-select"
-                  value={formData.businessType}
+              {/* Owner Name */}
+              <div className="form-group">
+                <label className="field-label">Owner Name <span className="required">*</span></label>
+                <input
+                  type="text"
+                  name="ownerName"
+                  className="form-input"
+                  value={formData.ownerName}
                   onChange={handleInputChange}
                   required
-                >
-                  <option value="">Business Type</option>
-                  <option value="Physical">Physical Location</option>
-                  <option value="Online">Online Only</option>
-                  <option value="Both">Both (Hybrid)</option>
-                </select>
-                <span className="required-indicator">*</span>
+                />
               </div>
 
-              {/* ========== GROUP 2: CONTACT ========== */}
-              <div className="form-section-header full-width">
-                <span className="section-number">2</span>
-                <span className="section-title">Contact Information</span>
-              </div>
-
-              {/* Email */}
+              {/* Contact Number */}
               <div className="form-group">
+                <label className="field-label">Contact Number <span className="required">*</span></label>
+                <input
+                  type="tel"
+                  name="contactNumber"
+                  className="form-input"
+                  value={formData.contactNumber}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              {/* Email Address */}
+              <div className="form-group">
+                <label className="field-label">Email Address <span className="required">*</span></label>
                 <input
                   type="email"
                   name="email"
-                  placeholder="Email Address"
                   className="form-input"
                   value={formData.email}
                   onChange={handleInputChange}
                   required
                 />
-                <span className="required-indicator">*</span>
               </div>
 
-              {/* Phone */}
-              <div className="form-group">
-                <input
-                  type="tel"
-                  name="phone"
-                  placeholder="Phone Number"
-                  className="form-input"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  required
-                />
-                <span className="required-indicator">*</span>
-              </div>
-
-              {/* Address (Optional) */}
+              {/* Facebook Page Link */}
               <div className="form-group full-width">
-                <textarea
-                  name="address"
-                  placeholder="Address"
-                  className="form-textarea"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  rows={2}
-                />
-                <span className="required-indicator">*</span>
-              </div>
-
-              {/* ========== GROUP 3: PROJECT ========== */}
-              <div className="form-section-header full-width">
-                <span className="section-number">3</span>
-                <span className="section-title">Project Details</span>
-              </div>
-
-              {/* Timeline */}
-              <div className="form-group">
-                <select
-                  name="timeline"
-                  className="form-select"
-                  value={formData.timeline}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Project Timeline</option>
-                  <option value="urgent">Urgent (1-2 weeks)</option>
-                  <option value="normal">Normal (1-2 months)</option>
-                  <option value="flexible">Flexible (3+ months)</option>
-                </select>
-                <span className="required-indicator">*</span>
-              </div>
-
-              {/* Budget */}
-              <div className="form-group">
-                <select
-                  name="budget"
-                  className="form-select"
-                  value={formData.budget}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Budget Range</option>
-                  <option value="999-1999">₱999 - ₱1,999</option>
-                  <option value="2499-4999">₱2,499 - ₱4,999</option>
-                  <option value="5000-9999">₱5,000 - ₱9,999</option>
-                  <option value="10000+">₱10,000+</option>
-                  <option value="not-sure">I'm not sure</option>
-                </select>
-                <span className="required-indicator">*</span>
-              </div>
-
-              {/* Plan Selection Dropdown */}
-              <div className="form-group full-width">
-                <select
-                  name="plan"
-                  className="form-select"
-                  value={formData.plan}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select Plan</option>
-                  <option value="Basic">Basic (4-6 sections max)</option>
-                  <option value="Pro">Pro (7-12+ sections)</option>
-                </select>
-                <span className="required-indicator">*</span>
-              </div>
-
-              {/* Page Sections */}
-              <div className="form-group full-width">
-                <div className="sections-label">
-                  Page Sections {formData.plan === 'Basic' && `(${getOptionalSectionsCount()}/4 optional + 2 mandatory)`}
-                  {formData.plan === 'Pro' && `(${formData.sections.length} selected)`}
-                </div>
-                <div className="sections-grid">
-                  {availableSections.map(section => (
-                    <label 
-                      key={section} 
-                      className={`section-checkbox ${isSectionDisabled(section) && !isMandatory(section) ? 'disabled' : ''} ${formData.sections.includes(section) ? 'checked' : ''} ${isMandatory(section) ? 'mandatory' : ''}`}
-                    >
-                      <input
-                        type="checkbox"
-                        value={section}
-                        checked={formData.sections.includes(section)}
-                        onChange={handleCheckboxChange}
-                        disabled={isSectionDisabled(section)}
-                      />
-                      <span className="checkmark"></span>
-                      {section}
-                      {isMandatory(section) && <span className="mandatory-badge">Required</span>}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Social Media */}
-              <div className="form-group">
-                <input
-                  type="text"
-                  name="socialMedia"
-                  placeholder="Social Media Links"
-                  className="form-input"
-                  value={formData.socialMedia}
-                  onChange={handleInputChange}
-                />
-                <span className="required-indicator">*</span>
-              </div>
-
-              {/* Google Drive Link */}
-              <div className="form-group">
+                <label className="field-label">Facebook Page Link</label>
                 <input
                   type="url"
-                  name="googleDrive"
-                  placeholder="Google Drive Link for Assets"
+                  name="facebookPage"
                   className="form-input"
-                  value={formData.googleDrive}
+                  value={formData.facebookPage}
                   onChange={handleInputChange}
                 />
-                <span className="required-indicator">*</span>
               </div>
+
+
+              {/* ========== SECTION 2: CHOOSE YOUR PLAN ========== */}
+              <div className="form-section-header full-width">
+                <span className="section-number">2</span>
+                <span className="section-title">Choose Your Plan</span>
+              </div>
+
+              <div className="plan-selection-container full-width">
+                <label className={`plan-card ${formData.plan === '999' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="plan"
+                    value="999"
+                    checked={formData.plan === '999'}
+                    onChange={handleInputChange}
+                    className="plan-radio"
+                  />
+                  <div className="plan-content">
+                    <div className="plan-header">
+                      <span className="plan-name">Basic Plan</span>
+                      <span className="plan-price">₱999</span>
+                    </div>
+                    <p className="plan-subtitle">E-Menu only, messages go to Messenger</p>
+                    <ul className="plan-features">
+                      <li>• No editing access for client</li>
+                      <li>• Spreadsheet disabled</li>
+                      <li>• Order tracking disabled</li>
+                      <li>• Email notification disabled</li>
+                      <li>• E-Menu only → direct to Messenger</li>
+                    </ul>
+                  </div>
+                </label>
+
+                <label className={`plan-card ${formData.plan === '2499' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="plan"
+                    value="2499"
+                    checked={formData.plan === '2499'}
+                    onChange={handleInputChange}
+                    className="plan-radio"
+                  />
+                  <div className="plan-content">
+                    <div className="plan-header">
+                      <span className="plan-name">Advance Plan</span>
+                      <span className="plan-price">₱2,499</span>
+                    </div>
+                    <p className="plan-subtitle">Complete system and features</p>
+                    <ul className="plan-features">
+                      <li>• Editable system</li>
+                      <li>• Spreadsheet enabled</li>
+                      <li>• Order tracking & dashboard</li>
+                      <li>• Email notifications</li>
+                      <li>• Complete features unlocked</li>
+                    </ul>
+                  </div>
+                </label>
+              </div>
+
+
+              {/* ========== SECTION 3: BUSINESS DETAILS ========== */}
+              <div className="form-section-header full-width">
+                <span className="section-number">3</span>
+                <span className="section-title">Business Details</span>
+              </div>
+
+              {/* Type of Business */}
+              <div className="form-group full-width">
+                <label className="field-label">Type of Business <span className="required">*</span></label>
+                <input
+                  type="text"
+                  name="businessType"
+                  placeholder="e.g., milk tea, burger shop, restaurant, food tray business"
+                  className="form-input"
+                  value={formData.businessType}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              {/* Products and Prices */}
+              <div className="form-group full-width">
+                <label className="field-label">List your products and prices <span className="required">*</span></label>
+                <p className="field-helper">(You may also send via Messenger if not ready)</p>
+                <textarea
+                  name="productsAndPrices"
+                  className="form-textarea"
+                  value={formData.productsAndPrices}
+                  onChange={handleInputChange}
+                  rows={4}
+                  required
+                />
+              </div>
+
+
+              {/* ========== SECTION 4: LOGO AND PHOTOS ========== */}
+              <div className="form-section-header full-width">
+                <span className="section-number">4</span>
+                <span className="section-title">Logo and Photos</span>
+              </div>
+
+              {/* Logo Choice */}
+              <div className="form-group full-width">
+                <label className="field-label">Do you already have a logo?</label>
+                <div className="radio-group-vertical">
+                  <label className="radio-option">
+                    <input
+                      type="radio"
+                      name="logoChoice"
+                      value="upload"
+                      checked={formData.logoChoice === 'upload'}
+                      onChange={handleInputChange}
+                    />
+                    Yes, I will upload
+                  </label>
+                  <label className="radio-option">
+                    <input
+                      type="radio"
+                      name="logoChoice"
+                      value="text"
+                      checked={formData.logoChoice === 'text'}
+                      onChange={handleInputChange}
+                    />
+                    None, please make a simple text logo
+                  </label>
+                  <label className="radio-option">
+                    <input
+                      type="radio"
+                      name="logoChoice"
+                      value="none"
+                      checked={formData.logoChoice === 'none'}
+                      onChange={handleInputChange}
+                    />
+                    No logo needed
+                  </label>
+                </div>
+              </div>
+
+              {/* Upload Logo - Conditional */}
+              {formData.logoChoice === 'upload' && (
+                <div className="form-group full-width">
+                  <label className="field-label">Upload Logo</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, 'logoFile')}
+                    className="file-input"
+                  />
+                  {formData.logoFile && <span className="file-success">Logo attached!</span>}
+                </div>
+              )}
+
+              {/* Product Photos Choice */}
+              <div className="form-group full-width">
+                <label className="field-label">Do you have product photos?</label>
+                <div className="radio-group-vertical">
+                  <label className="radio-option">
+                    <input
+                      type="radio"
+                      name="photoChoice"
+                      value="upload"
+                      checked={formData.photoChoice === 'upload'}
+                      onChange={handleInputChange}
+                    />
+                    Yes, I will upload
+                  </label>
+                  <label className="radio-option">
+                    <input
+                      type="radio"
+                      name="photoChoice"
+                      value="temp"
+                      checked={formData.photoChoice === 'temp'}
+                      onChange={handleInputChange}
+                    />
+                    Not yet, use temporary icons
+                  </label>
+                </div>
+              </div>
+
+              {/* Upload Photos - Conditional */}
+              {formData.photoChoice === 'upload' && (
+                <div className="form-group full-width">
+                  <label className="field-label">Upload product photos (optional)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple // Note: simplistic multiple support, might need array logic if strictly required but focusing on single for now as per base structure or simple concatenation
+                    onChange={(e) => handleFileChange(e, 'productPhotos')}
+                    className="file-input"
+                  />
+                  {formData.productPhotos && <span className="file-success">Photos attached!</span>}
+                </div>
+              )}
+
 
               {/* Submit Button */}
               <div className="form-group full-width">
                 <button type="submit" className="submit-btn" disabled={isSubmitting}>
-                  <span className="submit-btn__text">{isSubmitting ? 'Submitting...' : 'Submit Your Project'}</span>
+                  <span className="submit-btn__text">{isSubmitting ? 'Submitting...' : 'Submit Form'}</span>
                   {!isSubmitting && <span className="submit-btn__icon"></span>}
                   <span className="submit-btn__filler"></span>
                 </button>
@@ -346,6 +376,7 @@ function App() {
                   </div>
                 )}
               </div>
+
             </form>
           </div>
         </div>
