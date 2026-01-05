@@ -60,7 +60,7 @@ function App() {
     setIsSubmitting(true)
     setSubmitStatus(null)
 
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxXQvsj0LYlAGfcQWdz9SkTwqkcL28xoj4YY15FLr7BeZ736zEbFqrnuZWIF9J69AeF/exec'
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxnhEW3rL9xVRYnZj4LcduA_ycRAZxaAEIflFsiqCvejq5DQrE4H_FcBUvUbXgqqRra/exec'
 
     try {
       const params = new URLSearchParams()

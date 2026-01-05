@@ -180,42 +180,36 @@ function ensureHeaders(sheet) {
             .build();
         referredByRange.setDataValidation(referredByRule);
 
-        // ========== CONDITIONAL FORMATTING FOR STATUS COLORS ==========
-        const statusColorRange = sheet.getRange(2, 12, 500);
+        // ========== CONDITIONAL FORMATTING FOR STATUS COLORS (ENTIRE ROW) ==========
+        // Apply to entire row (columns A through N)
+        const fullRowRange = sheet.getRange(2, 1, 500, 14);  // A2:N501
 
-        // Clear existing conditional format rules for this range
-        const existingRules = sheet.getConditionalFormatRules();
-
-        // New - Green
+        // New - Green (entire row)
         const ruleNew = SpreadsheetApp.newConditionalFormatRule()
-            .whenTextEqualTo('New')
+            .whenFormulaSatisfied('=$L2="New"')
             .setBackground('#b7e1cd')  // Light green
-            .setFontColor('#137333')   // Dark green
-            .setRanges([statusColorRange])
+            .setRanges([fullRowRange])
             .build();
 
-        // In Progress - Yellow
+        // In Progress - Yellow (entire row)
         const ruleInProgress = SpreadsheetApp.newConditionalFormatRule()
-            .whenTextEqualTo('In Progress')
+            .whenFormulaSatisfied('=$L2="In Progress"')
             .setBackground('#fce8b2')  // Light yellow
-            .setFontColor('#b45309')   // Dark amber
-            .setRanges([statusColorRange])
+            .setRanges([fullRowRange])
             .build();
 
-        // Completed - Orange
+        // Completed - Orange (entire row)
         const ruleCompleted = SpreadsheetApp.newConditionalFormatRule()
-            .whenTextEqualTo('Completed')
+            .whenFormulaSatisfied('=$L2="Completed"')
             .setBackground('#fdd09f')  // Light orange
-            .setFontColor('#c65102')   // Dark orange
-            .setRanges([statusColorRange])
+            .setRanges([fullRowRange])
             .build();
 
-        // Lost/Rejected - Red
+        // Lost/Rejected - Red (entire row)
         const ruleLost = SpreadsheetApp.newConditionalFormatRule()
-            .whenTextEqualTo('Lost/Rejected')
+            .whenFormulaSatisfied('=$L2="Lost/Rejected"')
             .setBackground('#f4c7c3')  // Light red
-            .setFontColor('#a50e0e')   // Dark red
-            .setRanges([statusColorRange])
+            .setRanges([fullRowRange])
             .build();
 
         // Apply all rules
