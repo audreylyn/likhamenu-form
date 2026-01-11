@@ -11,7 +11,7 @@ function App() {
     facebookPage: '',
 
     // Plan
-    plan: '999', // Default to 999 Basic
+    plan: '1299', // Default to 1299 Basic
 
     // Business Details
     businessType: '',
@@ -176,19 +176,19 @@ function App() {
               </div>
 
               <div className="plan-selection-container full-width">
-                <label className={`plan-card ${formData.plan === '999' ? 'selected' : ''}`}>
+                <label className={`plan-card ${formData.plan === '1299' ? 'selected' : ''}`}>
                   <input
                     type="radio"
                     name="plan"
-                    value="999"
-                    checked={formData.plan === '999'}
+                    value="1299"
+                    checked={formData.plan === '1299'}
                     onChange={handleInputChange}
                     className="plan-radio"
                   />
                   <div className="plan-content">
                     <div className="plan-header">
                       <span className="plan-name">Basic Plan</span>
-                      <span className="plan-price">₱999</span>
+                      <span className="plan-price">₱1,299</span>
                     </div>
                     <p className="plan-subtitle">E-Menu only, messages go to Messenger</p>
                     <ul className="plan-features">
